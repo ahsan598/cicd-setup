@@ -1,0 +1,26 @@
+# first create namespace
+ kubectl create namespace webapps
+
+
+# apply serviceaccount
+kubectl apply -f sa.yml
+
+
+# apply role
+kubectl apply -f role.yml
+
+
+# assign role to service account
+kubectl apply -f assign.yml
+
+
+# apply secret to service account
+kubectl apply -f secret.yml -n webapps
+
+
+# to view secret
+kubectl -n webapps describe secret mysecretname
+
+
+# secret store @ .kube/config
+cd ~/.kube
