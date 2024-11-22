@@ -152,6 +152,13 @@ Let’s dive in and transform your software delivery process with this powerful 
    sudo docker run -d --name nexus -p 8081:8081 sonatype/nexus3
    ```
 
+5. Access Nexus:
+   - Navigate to http://your-server-ip:8081 in a browser.
+   - Retrieve the default admin password
+   ```sh
+   sudo docker exec -it nexus /bin/bash
+   cat sonatype-work/nexus3/admin.password
+   ```
 ---
 
 ### 6. Setting Up SonarQube Using Docker 📈
