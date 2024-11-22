@@ -1,0 +1,112 @@
+pipeline {
+    agent any
+
+    // agent {
+    //    label 'my-agent-label'
+    // }
+
+    tools {
+        jdk 'jdk17'    // Ensure this matches the JDK version installed in Jenkins
+        maven 'maven3' // Ensure this matches the Maven version installed in Jenkins
+    }
+
+    environment {
+        SCANNER_HOME = tool 'sonar-scanner'  // Ensure 'sonar-scanner' matches the SonarScanner tool name in Jenkins
+        DOCKER_IMAGE = 'user_id/myapp:1.0'  // Define your Docker image repository and tag
+    }
+
+    stages {
+        stage('Git Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/repo/repo_name.git'
+            }
+        }
+
+
+        stage('Code Compile') {
+            steps {
+                sh "mvn clean compile"
+            }
+        }
+
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonar') {
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
+
+
+        stage('OWASP Dependency Check') {
+            steps {
+                dependencyCheck additionalArguments: '', odcInstallation: 'DC'
+            }
+        }
+
+        stage('Code Build') {
+            steps {
+                sh "mvn package -DskipTests=true"
+            }
+        }
+
+
+        stage('Deploy to Nexus') {
+            steps {
+                script {
+                    withMaven(globalMavenSettingsConfig: 'global-maven', traceability: true)  {
+                        sh "mvn deploy"
+                    }
+                }
+            }
+        }
+
+
+        stage('Docker Image Build & Scan') {
+            steps {
+                script {
+                    sh "docker build -t $DOCKER_IMAGE -f docker/Dockerfile ."
+                    sh "trivy image --format table -o trivy-image-report.html $DOCKER_IMAGE"
+                }
+            }
+        }
+
+
+        stage('Docker Push') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'docker-cred') {
+                        sh "docker push $DOCKER_IMAGE"
+                    }
+                }
+            }
+        }
+
+
+        stage('Deploy To Kubernetes') {
+            steps {
+                withKubeConfig(caCertificate: '', clusterName: 'kubernetes', contextName: '', credentialsId: 'k8s-cred', namespace: 'webapps', restrictKubeConfigAccess: false, serverUrl: 'https://172.31.8.146:6443') {
+                    sh "kubectl apply -f deployment-service.yaml"
+                }
+            }
+        }
+        
+
+        stage('Verify the Deployment') {
+            steps {
+                withKubeConfig(caCertificate: '', clusterName: 'kubernetes', contextName: '', credentialsId: 'k8s-cred', namespace: 'webapps', restrictKubeConfigAccess: false, serverUrl: 'https://172.31.8.146:6443') {
+                    sh "kubectl get pods -n webapps"
+                    sh "kubectl get svc -n webapps"
+                }
+            }
+        }
+    }
+
+
+    post {
+        always {
+            cleanWs()  // Clean up workspace after build
+        }
+    }
+}
