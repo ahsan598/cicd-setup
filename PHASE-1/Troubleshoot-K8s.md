@@ -1,6 +1,5 @@
 #  I. Troubleshoot K8-Cluster: Kubernetes has already been initialized or a previous initialization process has left residual files, ports, or directories in use
 
----
 
 **Example:**
 ```sh
@@ -32,7 +31,7 @@ sudo netstat -tuln | grep 6443
 sudo netstat -tuln | grep 10250
 ```
 
-### 4. Restart Kubectl & re-initialized Kubernetes Initialization
+### 4. Restart Kubectl & re-initialized Kubernetes
 ```sh
 sudo systemctl restart kubelet
 sudo kubeadm init --ignore-preflight-errors=all
@@ -47,7 +46,6 @@ kubectl get nodes
 
 #  II. Troubleshoot K8-Cluster: An issue with the TLS certificate used by the Kubernetes API server. This usually happens due to mismatched or invalid certificates on the client or server side.
 
----
 
 **Example:**
 ```sh
@@ -61,14 +59,14 @@ Unable to connect to the server: tls: failed to verify certificate: x509: certif
 kubectl config view
 ```
 
-### 2. Recreate kubeconfig
+### 2. Re-create kubeconfig
 ```sh
 sudo kubeadm init phase kubeconfig admin
 sudo cp /etc/kubernetes/admin.conf ~/.kube/config
 sudo chown $(id -u):$(id -g) ~/.kube/config
 ```
 
-### 3. Check & Regenerate Certificates
+### 3. Check & Re-generate Certificates
 ```sh
 ls /etc/kubernetes/pki/ca.crt
 openssl x509 -in /etc/kubernetes/pki/ca.crt -noout -text
@@ -90,13 +88,12 @@ kubectl get nodes
 
 
 
-#  III. Troubleshoot K8-Cluster: Error indicates that kubectl is unable to connect to the Kubernetes API server running on `172.31.94.161:6443`. This can happen due to various reasons such as the API server not running, network issues, or incorrect configuration.
+#  III. Troubleshoot K8-Cluster: Error indicates that kubectl is unable to connect to the Kubernetes API server running on `Your-IP:6443`. This can happen due to various reasons such as the API server not running, network issues, or incorrect configuration.
 
----
 
 **Example:**
 ```sh
-The connection to the server 172.31.94.161:6443 was refused - did you specify the right host or port?
+The connection to the server 'Your-IP:6443' was refused - did you specify the right host or port?
 ```
 
 ## Run on Master node [run on Worker node as well if required]
